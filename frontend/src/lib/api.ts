@@ -1,6 +1,6 @@
 import type { SessionResponse, SessionDetailResponse, MessageResponse } from './types';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export async function createSession(transcript: string): Promise<SessionResponse> {
   const res = await fetch(`${API_URL}/sessions`, {
@@ -74,7 +74,7 @@ export async function loginAdmin(email: string, password: string) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: formData.toString()
   });
-  
+
   if (!res.ok) throw new Error('Login failed');
   return res.json();
 }
