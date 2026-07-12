@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-pro"
     groq_api_key: str = ""
+    hf_api_key: str = ""
 
     # ── JWT / Auth ────────────────────────────────────────────────────────
     jwt_secret: str = "cfs-dev-secret-key-change-in-production"

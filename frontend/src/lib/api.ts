@@ -79,6 +79,19 @@ export async function loginAdmin(email: string, password: string) {
   return res.json();
 }
 
+export async function registerOfficer(email: string, password: string, role: string = 'law_enforcement') {
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ email, password, role }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || 'Registration failed');
+  }
+  return res.json();
+}
+
 export async function getAdminSessions() {
   const res = await fetch(`${API_URL}/admin/sessions`, {
     headers: getAuthHeaders()

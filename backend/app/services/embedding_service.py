@@ -1,32 +1,40 @@
 """
-Embedding service using SentenceTransformers.
-Loads the model once in memory and provides async generation.
+Embedding service using Hugging Face Inference API.
+Avoids local PyTorch dependencies and memory overhead.
 """
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+import logging
+from huggingface_hub import AsyncInferenceClient
+from app.config import settings
 
-from sentence_transformers import SentenceTransformer
+logger = logging.getLogger(__name__)
 
-# Load the model synchronously at module import so it's ready.
 # all-MiniLM-L6-v2 produces 384-dimensional embeddings.
-MODEL_NAME = "all-MiniLM-L6-v2"
-print(f"Loading embedding model {MODEL_NAME}...")
-model = SentenceTransformer(MODEL_NAME)
-print("Embedding model loaded.")
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-# Thread pool for CPU-bound embedding generation
-executor = ThreadPoolExecutor(max_workers=4)
+# Initialize the async client
+client = AsyncInferenceClient(
+    model=MODEL_NAME,
+    token=settings.hf_api_key if settings.hf_api_key else None
+)
 
 async def get_embedding(text: str) -> list[float]:
     """
-    Generate an embedding for the given text.
-    Runs in a thread pool to avoid blocking the async event loop.
+    Generate an embedding for the given text using Hugging Face Inference API.
     """
-    loop = asyncio.get_running_loop()
-    # SentenceTransformer.encode returns a numpy array. We convert to a list of floats.
-    embedding = await loop.run_in_executor(
-        executor, 
-        lambda: model.encode(text).tolist()
-    )
-    return embedding
+    try:
+        response = await client.feature_extraction(text)
+        
+        # HuggingFace API returns nested lists for 1D inputs (e.g., [[float, float, ...]])
+        # or numpy arrays if numpy is installed.
+        if hasattr(response, "tolist"):
+            response = response.tolist()
+            
+        if isinstance(response, list) and len(response) > 0:
+            if isinstance(response[0], list):
+                return response[0]
+        return response
+    except Exception as e:
+        logger.error(f"Hugging Face API failed for embedding generation: {e}")
+        # Re-raise so the caller handles it, avoiding inserting zero-vectors into the DB
+        raise RuntimeError(f"Failed to generate embedding via Hugging Face: {e}") from e

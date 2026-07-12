@@ -27,12 +27,20 @@ import app.models  # noqa: F401
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
     # ── Startup ───────────────────────────────────────────────────────────
-    async with engine.begin() as conn:
-        # Enable pgvector extension (idempotent)
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        # Create all tables that don't already exist
-        await conn.run_sync(Base.metadata.create_all)
-    print("✅  Database tables created / verified")
+    import sys
+    import logging
+
+    try:
+        async with engine.begin() as conn:
+            # Enable pgvector extension (idempotent)
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            # Create all tables that don't already exist
+            await conn.run_sync(Base.metadata.create_all)
+        print("✅  Database tables created / verified")
+    except Exception as e:
+        logging.error(f"Failed to connect to database: {e}")
+        sys.stderr.write(f"Database Connection Error: {e}\n")
+        raise
 
     yield  # ← application runs here
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Send, ShieldAlert, Phone, Building2, User, Link2 } from 'lucide-react';
-import { getSessionDetail, sendSessionMessage } from '../../lib/api';
+import { ArrowLeft, Send, ShieldAlert, Phone, Building2, User, Link2, CheckCircle2 } from 'lucide-react';
+import { getSessionDetail, sendSessionMessage, updateSessionStatus } from '../../lib/api';
 import PageTransition from '../../components/PageTransition';
 
 export default function SessionDetail() {
@@ -10,6 +10,7 @@ export default function SessionDetail() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +64,19 @@ export default function SessionDetail() {
     }
   };
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!id || updatingStatus || session.status === newStatus) return;
+    setUpdatingStatus(true);
+    try {
+      await updateSessionStatus(id, newStatus);
+      setSession((prev: any) => ({ ...prev, status: newStatus }));
+    } catch (err) {
+      console.error('Failed to update status', err);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const getEntityIcon = (type: string) => {
     switch (type) {
       case 'phone': return <Phone className="w-3 h-3" />;
@@ -101,19 +115,34 @@ export default function SessionDetail() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold font-mono">REP-{session.id.split('-')[0].toUpperCase()}</h1>
-              {session.status === 'pending' ? (
-                <span className="px-2 py-1 rounded text-xs font-bold bg-slate-500/20 text-slate-400">
-                  Pending Audio
-                </span>
-              ) : (
-                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                  session.risk_score >= 70 ? 'bg-alert-red/20 text-alert-red' : 
-                  session.risk_score >= 40 ? 'bg-yellow-500/20 text-yellow-500' : 
-                  'bg-safe-green/20 text-safe-green'
-                }`}>
-                  {session.risk_score}/100 Risk
-                </span>
-              )}
+              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                session.risk_score >= 70 ? 'bg-alert-red/20 text-alert-red' : 
+                session.risk_score >= 40 ? 'bg-yellow-500/20 text-yellow-500' : 
+                'bg-safe-green/20 text-safe-green'
+              }`}>
+                {session.risk_score}/100 Risk
+              </span>
+              
+              <div className="ml-4 border-l border-white/10 pl-4 flex items-center gap-2">
+                <span className="text-sm text-slate-400">Status:</span>
+                <select 
+                  value={session.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  disabled={updatingStatus}
+                  className={`bg-navy-900 border border-white/10 rounded-lg px-3 py-1 text-sm font-medium focus:outline-none focus:border-electric-blue transition-colors appearance-none ${
+                    session.status === 'resolved' ? 'text-safe-green' : 
+                    session.status === 'investigating' ? 'text-yellow-500' : 
+                    session.status === 'pending' ? 'text-slate-400' :
+                    'text-alert-red'
+                  }`}
+                >
+                  <option value="pending">Pending Audio</option>
+                  <option value="flagged">Flagged</option>
+                  <option value="investigating">Investigating</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+                {updatingStatus && <div className="w-3 h-3 border-2 border-electric-blue border-t-transparent rounded-full animate-spin"></div>}
+              </div>
             </div>
             <p className="text-slate-400 text-sm mt-1">Submitted on {new Date(session.created_at).toLocaleString()}</p>
           </div>

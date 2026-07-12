@@ -272,14 +272,12 @@ SCAM_DATA = [
     }
 ]
 
+from app.database import engine, async_session_factory
+
 async def seed():
     print(f"Connecting to database: {settings.database_url}")
-    engine = create_async_engine(settings.database_url)
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-
-    async with async_session() as session:
+    
+    async with async_session_factory() as session:
         # Check if we already have data to avoid duplicates on multiple runs
         from sqlalchemy import select
         result = await session.execute(select(ScamPattern.title))
@@ -301,6 +299,9 @@ async def seed():
                 embedding=emb
             )
             session.add(pattern)
+            
+            # Rate limit handling for Hugging Face Inference API
+            await asyncio.sleep(1.5)
         
         await session.commit()
         print("✅ Successfully seeded scam patterns.")

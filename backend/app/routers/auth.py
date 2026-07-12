@@ -7,14 +7,30 @@ from datetime import timedelta
 
 from app.database import get_db
 from app.models import User
-from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
+from app.auth import get_password_hash, verify_password, create_access_token, get_current_user, require_admin
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+from pydantic import BaseModel, EmailStr, Field, field_validator
+import re
+
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=8, description="Password must be at least 8 characters long")
     role: str = "law_enforcement"  # 'law_enforcement' or 'admin'
+
+    @field_validator('password')
+    @classmethod
+    def password_complexity(cls, v):
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("Password must contain at least one special character")
+        return v
 
 class UserResponse(BaseModel):
     email: str
@@ -27,7 +43,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse, dependencies=[Depends(require_admin)])
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     if user.role not in ["law_enforcement", "admin"]:
         raise HTTPException(status_code=400, detail="Invalid role")

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Network, Search, X, Phone, Building2, User, Link2, ShieldAlert } from 'lucide-react';
-import { getAdminSessions } from '../../lib/api';
+import { Network, Search, X, Phone, Building2, User, Link2, ShieldAlert, UserPlus } from 'lucide-react';
+import { getAdminSessions, registerOfficer } from '../../lib/api';
 import PageTransition from '../../components/PageTransition';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Dashboard() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -14,6 +15,16 @@ export default function Dashboard() {
   
   // Quick View Modal state
   const [quickViewSession, setQuickViewSession] = useState<any | null>(null);
+
+  // Register Officer Modal state
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [newOfficerEmail, setNewOfficerEmail] = useState('');
+  const [newOfficerPassword, setNewOfficerPassword] = useState('');
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState('');
+
+  const userRole = useAuthStore(state => state.role);
 
   const navigate = useNavigate();
 
@@ -64,6 +75,23 @@ export default function Dashboard() {
     return true;
   });
 
+  const handleRegisterOfficer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError('');
+    setRegisterSuccess('');
+    setRegistering(true);
+    try {
+      await registerOfficer(newOfficerEmail, newOfficerPassword);
+      setRegisterSuccess('Officer account created successfully!');
+      setNewOfficerEmail('');
+      setNewOfficerPassword('');
+    } catch (err: any) {
+      setRegisterError(err.message || 'Failed to create officer account');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   return (
     <PageTransition>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
@@ -72,13 +100,24 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold">Fraud Reports</h1>
             <p className="text-slate-400 mt-1">Review flagged digital arrest and scam sessions.</p>
           </div>
-          <Link 
-            to="/dashboard/graph" 
-            className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors"
-          >
-            <Network className="w-5 h-5" />
-            View Network Graph
-          </Link>
+          <div className="flex gap-3">
+            {userRole === 'admin' && (
+              <button 
+                onClick={() => setShowRegisterModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-electric-blue/20 text-electric-blue border border-electric-blue/30 rounded-lg hover:bg-electric-blue/30 transition-colors"
+              >
+                <UserPlus className="w-5 h-5" />
+                Add Officer
+              </button>
+            )}
+            <Link 
+              to="/dashboard/graph" 
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors"
+            >
+              <Network className="w-5 h-5" />
+              View Network Graph
+            </Link>
+          </div>
         </div>
 
         <div className="glass rounded-2xl overflow-hidden border-t border-white/20 relative z-10">
@@ -253,6 +292,74 @@ export default function Dashboard() {
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* Register Officer Modal */}
+        {showRegisterModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in zoom-in-95">
+            <div className="glass w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-navy-900/50">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-electric-blue" />
+                  <h3 className="font-bold text-lg">Register New Officer</h3>
+                </div>
+                <button 
+                  onClick={() => {
+                    setShowRegisterModal(false);
+                    setRegisterError('');
+                    setRegisterSuccess('');
+                  }}
+                  className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {registerError && (
+                  <div className="mb-4 p-3 rounded bg-alert-red/10 border border-alert-red/20 text-alert-red text-sm">
+                    {registerError}
+                  </div>
+                )}
+                {registerSuccess && (
+                  <div className="mb-4 p-3 rounded bg-safe-green/10 border border-safe-green/20 text-safe-green text-sm">
+                    {registerSuccess}
+                  </div>
+                )}
+                <form onSubmit={handleRegisterOfficer} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      required
+                      value={newOfficerEmail}
+                      onChange={(e) => setNewOfficerEmail(e.target.value)}
+                      className="w-full bg-navy-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-electric-blue"
+                      placeholder="officer@cfs.in"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+                    <input 
+                      type="password" 
+                      required
+                      value={newOfficerPassword}
+                      onChange={(e) => setNewOfficerPassword(e.target.value)}
+                      className="w-full bg-navy-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-electric-blue"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={registering}
+                    className="w-full py-2 px-4 bg-electric-blue text-navy-900 font-bold rounded-lg hover:bg-electric-blue-hover transition-colors disabled:opacity-50"
+                  >
+                    {registering ? 'Creating...' : 'Create Account'}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
