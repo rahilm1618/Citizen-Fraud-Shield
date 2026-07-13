@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Send, ShieldAlert, Phone, Building2, User, Link2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Send, ShieldAlert, Phone, Building2, User, Link2 } from 'lucide-react';
 import { getSessionDetail, sendSessionMessage, updateSessionStatus } from '../../lib/api';
 import PageTransition from '../../components/PageTransition';
 
