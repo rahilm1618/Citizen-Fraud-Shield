@@ -34,13 +34,14 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             # Enable pgvector extension (idempotent)
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            # Create all tables that don't already exist
-            await conn.run_sync(Base.metadata.create_all)
-        print("✅  Database tables created / verified")
+            # Note: We do NOT run Base.metadata.create_all here in production 
+            # because DDL commands can hang indefinitely over a transaction pooler.
+            # The tables were already created via the direct connection/seed script!
+        print("✅  Database connected successfully")
     except Exception as e:
         logging.error(f"Failed to connect to database: {e}")
         sys.stderr.write(f"Database Connection Error: {e}\n")
-        raise
+        # We don't raise here so the server still boots and returns 500s rather than failing Render's port bind
 
     yield  # ← application runs here
 
