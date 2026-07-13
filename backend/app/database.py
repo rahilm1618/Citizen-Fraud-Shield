@@ -18,6 +18,7 @@ elif database_url.startswith("postgresql://") and not database_url.startswith("p
 connect_args = {}
 if "supabase" in database_url:
     connect_args["prepared_statement_cache_size"] = 0
+    connect_args["statement_cache_size"] = 0
 
 # ── Engine ────────────────────────────────────────────────────────────────────
 engine = create_async_engine(
