@@ -3,10 +3,12 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.database import Base
 
+from sqlalchemy.pool import NullPool
+
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5434/citizen_fraud_shield"
 
-# Use the test database URL for testing
-engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+# Use NullPool to prevent connection sharing across different pytest-asyncio event loops
+engine = create_async_engine(TEST_DATABASE_URL, echo=False, poolclass=NullPool)
 TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
