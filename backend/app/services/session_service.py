@@ -33,26 +33,35 @@ async def update_session_score(session: FraudSession, db: AsyncSession) -> Fraud
     transcript_emb = await get_embedding(transcript)
     session.embedding = transcript_emb
     
+    from app.config import settings
+    
+    distance_col = ScamPattern.embedding.cosine_distance(transcript_emb).label("distance")
     stmt = (
-        select(ScamPattern)
-        .order_by(ScamPattern.embedding.cosine_distance(transcript_emb))
+        select(ScamPattern, distance_col)
+        .order_by(distance_col)
         .limit(5)
     )
     result = await db.execute(stmt)
-    top_patterns = result.scalars().all()
+    top_patterns = result.all()
     
     matched_patterns_dicts = []
-    matched_pattern_ids = []
-    for pattern in top_patterns:
+    matched_patterns_data = []
+    for pattern, distance in top_patterns:
+        if distance > settings.rag_similarity_threshold:
+            continue
+           
         matched_patterns_dicts.append({
             "id": str(pattern.id),
             "title": pattern.title,
             "category": pattern.category,
             "script_text": pattern.script_text,
         })
-        matched_pattern_ids.append(pattern.id)
+        matched_patterns_data.append({
+            "id": str(pattern.id),
+            "distance": distance
+        })
         
-    session.matched_pattern_ids = matched_pattern_ids
+    session.matched_patterns_data = matched_patterns_data
     
     llm_result = await score_transcript(transcript, matched_patterns_dicts)
     session.risk_score = llm_result.get("risk_score", 0)

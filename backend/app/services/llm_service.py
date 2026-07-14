@@ -23,11 +23,13 @@ async def score_transcript(transcript: str, matched_patterns: list[dict]) -> dic
     Returns a dict with: risk_score (0-100), explanation (str), red_flags (list of str)
     """
     
-    context_str = "\n".join([f"Pattern: {p['title']}\nScript: {p['script_text']}" for p in matched_patterns])
+    if not matched_patterns:
+        context_str = "No close reference pattern was found. Rely on general fraud-detection reasoning rather than a fabricated pattern match."
+    else:
+        context_str = "Reference these known scam patterns if relevant:\n" + "\n".join([f"Pattern: {p['title']}\nScript: {p['script_text']}" for p in matched_patterns])
     
     system_prompt = f"""You are an expert fraud detection AI for Indian citizens.
 Analyze the following transcript of a suspicious call/message.
-Reference these known scam patterns if relevant:
 {context_str}
 
 Evaluate the transcript and output strict JSON with the following schema:

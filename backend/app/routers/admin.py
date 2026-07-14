@@ -99,6 +99,9 @@ async def get_session_detail(session_id: uuid.UUID, db: AsyncSession = Depends(g
         ents = e_result.scalars().all()
         entities = [{"id": e.id, "type": e.entity_type, "value": e.entity_value} for e in ents]
     
+    from app.utils.scoring import get_matched_patterns_for_session
+    matched_patterns = await get_matched_patterns_for_session(db, s)
+    
     return {
         "id": s.id,
         "transcript_text": s.transcript_text,
@@ -106,6 +109,7 @@ async def get_session_detail(session_id: uuid.UUID, db: AsyncSession = Depends(g
         "ai_explanation": s.ai_explanation,
         "status": s.status,
         "created_at": s.created_at.replace(tzinfo=timezone.utc) if not s.created_at.tzinfo else s.created_at,
+        "matched_patterns": matched_patterns,
         "messages": [MessageResponse.model_validate(m) for m in messages],
         "entities": entities
     }

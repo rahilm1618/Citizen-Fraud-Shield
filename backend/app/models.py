@@ -25,7 +25,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -90,8 +90,8 @@ class FraudSession(Base):
     transcript_text: Mapped[str] = mapped_column(Text, nullable=False)
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False)
     ai_explanation: Mapped[str] = mapped_column(Text, nullable=False)
-    matched_pattern_ids = mapped_column(
-        ARRAY(UUID(as_uuid=True)), nullable=True
+    matched_patterns_data = mapped_column(
+        JSONB, nullable=True
     )
     embedding = mapped_column(Vector(384), nullable=True)
     status: Mapped[str] = mapped_column(

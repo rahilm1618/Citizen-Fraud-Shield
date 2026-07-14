@@ -8,6 +8,7 @@ from app.models import FraudSession, ScamPattern, SessionMessage
 from app.schemas import SessionCreate, SessionResponse, SessionDetailResponse, MessageCreate, MessageResponse, MatchedPattern
 from app.services.session_service import process_new_session, process_followup_message, create_live_session, update_session_score
 from app.services.transcription_service import transcribe_audio_chunk
+from app.utils.scoring import get_matched_patterns_for_session
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -21,18 +22,7 @@ async def create_session(session_data: SessionCreate, db: AsyncSession = Depends
         new_session = await process_new_session(session_data, db)
         
         # We need to fetch the matched patterns to return them in the response
-        matched_patterns = []
-        if new_session.matched_pattern_ids:
-            stmt = select(ScamPattern).where(ScamPattern.id.in_(new_session.matched_pattern_ids))
-            result = await db.execute(stmt)
-            patterns = result.scalars().all()
-            for p in patterns:
-                matched_patterns.append(MatchedPattern(
-                    id=p.id,
-                    title=p.title,
-                    category=p.category,
-                    similarity_score=0.0 # We don't have the exact similarity score here without recomputing or returning it from the service
-                ))
+        matched_patterns = await get_matched_patterns_for_session(db, new_session)
                 
         return SessionResponse(
             id=new_session.id,
@@ -126,18 +116,7 @@ async def process_audio_chunk(
         session = await update_session_score(session, db)
         
     # 5. Format matched patterns for response
-    matched_patterns = []
-    if session.matched_pattern_ids:
-        stmt = select(ScamPattern).where(ScamPattern.id.in_(session.matched_pattern_ids))
-        result = await db.execute(stmt)
-        patterns = result.scalars().all()
-        for p in patterns:
-            matched_patterns.append(MatchedPattern(
-                id=p.id,
-                title=p.title,
-                category=p.category,
-                similarity_score=0.0
-            ))
+    matched_patterns = await get_matched_patterns_for_session(db, session)
             
     return SessionResponse(
         id=session.id,
@@ -167,18 +146,7 @@ async def get_session(session_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     msg_result = await db.execute(msg_stmt)
     messages = msg_result.scalars().all()
     
-    matched_patterns = []
-    if fraud_session.matched_pattern_ids:
-        p_stmt = select(ScamPattern).where(ScamPattern.id.in_(fraud_session.matched_pattern_ids))
-        p_result = await db.execute(p_stmt)
-        patterns = p_result.scalars().all()
-        for p in patterns:
-            matched_patterns.append(MatchedPattern(
-                id=p.id,
-                title=p.title,
-                category=p.category,
-                similarity_score=0.0
-            ))
+    matched_patterns = await get_matched_patterns_for_session(db, fraud_session)
             
     response = SessionDetailResponse(
         id=fraud_session.id,
