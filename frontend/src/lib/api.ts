@@ -87,7 +87,15 @@ export async function registerOfficer(email: string, password: string, role: str
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Registration failed');
+    let errorMessage = 'Registration failed';
+    if (data.detail) {
+      if (typeof data.detail === 'string') {
+        errorMessage = data.detail;
+      } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+        errorMessage = data.detail[0].msg; // Get the first Pydantic validation error
+      }
+    }
+    throw new Error(errorMessage);
   }
   return res.json();
 }
