@@ -1,0 +1,69 @@
+{
+  "positive": [
+    {
+      "transcript": "Sir I am calling from CBI cyber cell Mumbai. Your Aadhaar card has been used in a money laundering case linked to a Dubai account. You are under digital arrest, you must stay on this video call and not hang up or we will send a team to arrest you physically. Transfer your savings to the RBI verification account immediately.",
+      "expected_category": "digital_arrest"
+    },
+    {
+      "transcript": "This is an automated message from the courier company. Your parcel has been stopped at customs because it contains illegal items. Press 1 to speak to an officer. To release your parcel you must immediately pay a customs penalty through UPI, otherwise police action will be taken against you today.",
+      "expected_category": "customs_scam"
+    },
+    {
+      "transcript": "Dear customer your electricity connection will be disconnected tonight at 9 PM because your bill has not been updated. Please call our officer immediately and install the AnyDesk app on your phone so we can help you clear the pending amount right now.",
+      "expected_category": "electricity_scam"
+    },
+    {
+      "transcript": "Congratulations, we are offering you a simple work from home job where you just like and subscribe to YouTube videos and earn 3000 rupees daily. To receive your first payment you need to register on our portal and pay a small refundable activation fee.",
+      "expected_category": "work_from_home"
+    },
+    {
+      "transcript": "You borrowed 5000 rupees from our instant loan app last week and the amount due is now 18000 rupees with late charges. If you do not pay by tonight we have already downloaded your contact list and photos and will send them to everyone you know.",
+      "expected_category": "loan_fraud"
+    },
+    {
+      "transcript": "Hello, this is regarding your bank KYC. Your account will be blocked within 2 hours because your KYC has expired. Please share the OTP that was just sent to your registered mobile number so we can update your details and keep your account active.",
+      "expected_category": "kyc_fraud"
+    },
+    {
+      "transcript": "Hi I saw your profile and felt an instant connection, I don't usually do this but I feel like we could be something special. I am currently stuck abroad and my card is blocked, could you help me with a small transfer, I promise I will pay you back the moment I land.",
+      "expected_category": "romance_scam"
+    },
+    {
+      "transcript": "We regret to inform you that your computer has a virus and is sending your banking data to hackers right now. Do not turn off your computer. Please install this remote support tool immediately so our certified technician can secure your system before your bank account is emptied.",
+      "expected_category": "tech_support_scam"
+    },
+    {
+      "transcript": "Congratulations, your mobile number has won 25 lakh rupees in the KBC lucky draw lottery. To claim your prize you need to first pay a small processing and tax fee of 15000 rupees to our official account, after which the full amount will be transferred to you today.",
+      "expected_category": "lottery_scam"
+    }
+  ],
+  "negative": [
+    {
+      "transcript": "Hey, are you still up for dinner tonight? I was thinking we could try that new place near the market, they have really good chaat. Let me know what time works for you, I'm free after 7."
+    },
+    {
+      "transcript": "Hi, I'm calling to confirm your appointment with Dr. Mehta tomorrow at 11 AM. Please arrive 15 minutes early to fill out some paperwork, and remember to bring your previous prescription with you."
+    },
+    {
+      "transcript": "Good morning, this is regarding the order you placed yesterday. Your delivery is scheduled to arrive between 2 and 5 PM today. If no one is home, our delivery partner will attempt again tomorrow. Is that time window okay for you?"
+    },
+    {
+      "transcript": "Mom, I landed safely, the flight was a bit delayed but everything's fine. I'm going to grab my luggage and then take a cab home. Don't wait up, I'll probably reach by midnight. Love you, talk soon."
+    },
+    {
+      "transcript": "Thanks for calling customer support. I can see your refund request for the returned item was processed on the 4th, it usually takes 5 to 7 business days to reflect in your bank account. Is there anything else I can help you with today?"
+    },
+    {
+      "transcript": "So the meeting got pushed to 3 PM because half the team is stuck on the client call. I'll send you the updated deck before then, can you just double check the numbers on slide 6 in the meantime?"
+    },
+    {
+      "transcript": "Hey it's been ages, how have you been? I heard you moved to a new apartment, how's the neighborhood treating you? We should catch up properly this weekend if you're free."
+    },
+    {
+      "transcript": "Your cab is arriving in 3 minutes, a white Swift Dzire, license plate ending 4521. The driver's name is Rakesh. Please be ready at the pickup point to avoid delays."
+    },
+    {
+      "transcript": "This is a reminder that your library books are due for return this Friday. You can renew them online through the portal if you need more time, or return them at any branch counter during working hours."
+    }
+  ]
+}

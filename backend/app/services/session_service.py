@@ -22,6 +22,17 @@ async def create_live_session(db: AsyncSession) -> FraudSession:
     return new_session
 
 
+async def get_closest_patterns(db: AsyncSession, transcript_emb: list[float], limit: int = 5) -> list[tuple[ScamPattern, float]]:
+    """Returns a list of (ScamPattern, distance) sorted by closest match."""
+    distance_col = ScamPattern.embedding.cosine_distance(transcript_emb).label("distance")
+    stmt = (
+        select(ScamPattern, distance_col)
+        .order_by(distance_col)
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return result.all()
+
 async def update_session_score(session: FraudSession, db: AsyncSession) -> FraudSession:
     """Runs the scoring pipeline (embedding, search, LLM) on an existing session."""
     transcript = session.transcript_text
@@ -35,14 +46,7 @@ async def update_session_score(session: FraudSession, db: AsyncSession) -> Fraud
     
     from app.config import settings
     
-    distance_col = ScamPattern.embedding.cosine_distance(transcript_emb).label("distance")
-    stmt = (
-        select(ScamPattern, distance_col)
-        .order_by(distance_col)
-        .limit(5)
-    )
-    result = await db.execute(stmt)
-    top_patterns = result.all()
+    top_patterns = await get_closest_patterns(db, transcript_emb, limit=5)
     
     matched_patterns_dicts = []
     matched_patterns_data = []

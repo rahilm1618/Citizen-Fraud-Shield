@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     jwt_expiration_minutes: int = 1440  # 24 hours
 
     # ── RAG ───────────────────────────────────────────────────────────────
-    rag_similarity_threshold: float = 0.35
+    rag_similarity_threshold: float = 0.50
 
     # ── CORS ──────────────────────────────────────────────────────────────
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
